@@ -33,6 +33,26 @@ body {
   text-align: center;
 }
 
+#lobby-card select {
+  width: 100%;
+  padding: 11px 14px;
+  border: 1.5px solid #d4d4d8;
+  border-radius: 10px;
+  font-size: 16px;
+  font-family: inherit;
+  outline: none;
+  text-align: center;
+  transition: border-color 0.15s;
+  background: #fafafa;
+  cursor: pointer;
+  margin-bottom: 12px;
+}
+
+#lobby-card select:focus {
+  border-color: #18181b;
+  background: #fff;
+}
+
 #lobby-card h1 {
   font-size: 26px;
   font-weight: 800;
@@ -152,11 +172,16 @@ body {
 
 /* ── MAP ─────────────────────────────────────────────── */
 #map {
-  position: fixed;
-  inset: 0;
-  width: 100vw;
-  height: 100vh;
-  z-index: 0;
+  position: absolute;
+  top: 25px;           /* Abstand von oben - anpassbar */
+  left: 20px;          /* Abstand von links - anpassbar */
+  width: calc(100% - 300px);  /* Breite - lässt Platz für Leaderboard */
+  height: calc(100vh - 50px); /* Höhe - anpassbar */
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+  border: 2px solid #e4e4e7;
+  overflow: hidden;
+  z-index: 1;
 }
 
 /* ── DARK OVERLAY ────────────────────────────────────── */
@@ -220,8 +245,8 @@ body {
 /* ── LEADERBOARD ─────────────────────────────────────── */
 #leaderboard {
   position: fixed;
-  top: 16px;
-  left: 16px;
+  top: 76px;
+  right:16px;
   z-index: 20;
   background: rgba(255, 255, 255, 0.92);
   backdrop-filter: blur(8px);
@@ -305,8 +330,8 @@ body {
 #fab-submit {
   position: fixed;
   bottom: 28px;
-  left: 50%;
-  transform: translateX(-50%);
+  right: 16px;
+  transform: none;
   z-index: 30;
   background: #18181b;
   color: #fff;

@@ -1,5 +1,28 @@
 import { supabase } from './supabase.js';
 
+// ── NEU: LOBBIES LADEN BEIM START ────────────────────
+window.addEventListener('load', async () => {
+  const select = document.getElementById('lobby-select');
+  
+  const { data, error } = await supabase
+    .from('lobbies')
+    .select('name')
+    .order('name', { ascending: true });
+
+  if (error || !data) {
+    select.innerHTML = '<option value="" disabled>Error loading lobbies</option>';
+    return;
+  }
+
+  select.innerHTML = '<option value="" disabled selected>Select a lobby…</option>';
+  data.forEach(lobby => {
+    const option = document.createElement('option');
+    option.value = lobby.name;
+    option.textContent = lobby.name;
+    select.appendChild(option);
+  });
+});
+
 // ── LOBBY STATE ──────────────────────────────────────
 // Exported so map.js and submission.js can read current lobby
 export let currentLobby = null;
