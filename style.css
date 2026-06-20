@@ -762,3 +762,14 @@ input[type="text"]:focus {
   font-size: 12px;
   color: #52525b;
 }
+
+#btn-start-hunt {
+  margin-top: 10px;
+  width: 100%;
+  border: none;
+  border-radius: 10px;
+  padding: 10px;
+  cursor: pointer;
+  background: #facc15;
+  font-weight: 600;
+}

@@ -163,6 +163,11 @@ let treasureHuntDraft = null;
 let treasureHuntStep = 0;
 let treasureHuntMarkers = [];
 
+function getTreasureHuntStorageKey() {
+  const lobby = JSON.parse(sessionStorage.getItem('geostickrs_lobby'));
+  return `geostickrs_treasure_hunt_${lobby?.name ?? 'default'}`;
+}
+
 function startTreasureHuntCreator() {
   console.log('Treasure Hunt Creator started');
   const adminPanel = document.getElementById('admin-panel');
@@ -196,12 +201,21 @@ function handleTreasureHuntClick(lat, lng) {
 
   // First 3 clicks = checkpoints
   if (treasureHuntStep < 3) {
-    treasureHuntDraft.checkpoints.push({ lat, lng });
+    const hint = `Hint for Checkpoint ${treasureHuntStep + 1}`;
+
+    treasureHuntDraft.checkpoints.push({
+      lat,
+      lng,
+      hint
+    });
 
     const marker = L.marker([lat, lng])
       .addTo(map)
-      .bindPopup(`Checkpoint ${treasureHuntStep + 1}`)
-      .openPopup();
+      .bindPopup(`
+        <strong>Checkpoint ${treasureHuntStep + 1}</strong><br>
+        ${hint || 'No hint added'}
+      `)
+  .openPopup();
 
     treasureHuntMarkers.push(marker);
 
@@ -226,7 +240,7 @@ function handleTreasureHuntClick(lat, lng) {
 
   treasureHuntMarkers.push(treasureMarker);
 
-  localStorage.setItem('geostickrs_treasure_hunt', JSON.stringify(treasureHuntDraft));
+  localStorage.setItem(getTreasureHuntStorageKey(), JSON.stringify(treasureHuntDraft));
 
   console.log('Treasure Hunt created:', treasureHuntDraft);
 
@@ -238,13 +252,13 @@ function handleTreasureHuntClick(lat, lng) {
 
 
 function loadSavedTreasureHunt() {
-  const saved = localStorage.getItem('geostickrs_treasure_hunt');
+  const saved = localStorage.getItem(getTreasureHuntStorageKey());
   if (!saved || !map) return;
 
   const hunt = JSON.parse(saved);
 
   if (hunt.expiresAt && new Date(hunt.expiresAt) < new Date()) {
-    localStorage.removeItem('geostickrs_treasure_hunt');
+    localStorage.removeItem(getTreasureHuntStorageKey());
     return;
   }
 
@@ -299,6 +313,19 @@ function showHuntBadge(hunt) {
   }
 
   updateTimer();
-  clearInterval(huntTimerInterval);
-  huntTimerInterval = setInterval(updateTimer, 1000);
+clearInterval(huntTimerInterval);
+huntTimerInterval = setInterval(updateTimer, 1000);
+
+const startButton = document.getElementById('btn-start-hunt');
+
+startButton?.addEventListener('click', () => {
+  activePlayerHunt = {
+    currentCheckpoint: 0,
+    startedAt: new Date().toISOString()
+  };
+
+  alert('Checkpoint 1 activated.');
+});
 }
+
+let activePlayerHunt = null;
