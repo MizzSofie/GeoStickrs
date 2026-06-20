@@ -9,26 +9,61 @@
 </head>
 <body>
 
-  <!-- ── LOBBY SCREEN (shown first) ───────────────── -->
-  <div id="lobby-screen">
-    <div id="lobby-card">
-      <div class="step-icon">📍</div>
-      <h1>GeoStickrs</h1>
-      <p class="lobby-subtitle">Enter your lobby password to continue</p>
-      <input type="password" id="lobby-password" placeholder="Lobby password" autocomplete="off">
-      <p id="lobby-error" class="step-error"></p>
-      <button id="btn-lobby-join" class="btn-primary">Join lobby →</button>
-      <button id="btn-lobby-create" class="btn-secondary">Create lobby →</button>
-      <div id="lobby-creator">
-        <div class="horizontal-line"></div>
-        <p class="lobby-subtitle">Enter your new lobby name and password</p>
-        <input type="text" id="lobby-new-name" placeholder="Lobby name" autocomplete="off">
-        <input type="password" id="lobby-new-password" placeholder="Lobby password" autocomplete="off">
-        <p id="step-lobby-create-error" class="step-error"></p>
-        <button id="btn-lobby-home" class="btn-primary">Next: set home location →</button>
-      </div>    
-    </div>     
+<!-- INTRO SCREEN -->
+<div id="intro-screen">
+  <div id="intro-card">
+    <div class="step-icon">📍</div>
+
+    <h1>Welcome to GeoStickrs</h1>
+
+    <p>
+      GeoStickrs lets you place stickers around the world,
+      compete with your friends and discover new locations.
+    </p>
+
+    <div class="intro-steps">
+      <p><strong>1.</strong> Join or create a lobby</p>
+      <p><strong>2.</strong> Place a sticker on the map</p>
+      <p><strong>3.</strong> Add a photo (optional)</p>
+      <p><strong>4.</strong> Earn points and climb the leaderboard</p>
+    </div>
+
+    <button id="btn-intro-skip" class="btn-primary">
+      Got it →
+    </button>
   </div>
+</div>
+
+
+
+<!-- ── LOBBY SCREEN (shown first) ───────────────── -->
+<div id="lobby-screen">
+  <div id="lobby-card">
+    <div class="step-icon">📍</div>
+    <h1>GeoStickrs</h1>
+    
+    <!-- ── LOBBY SELECTOR ─────────────────────────── -->
+    <select id="lobby-select">
+      <option value="" disabled selected>Select a lobby…</option>
+    </select>
+    
+    <p class="lobby-subtitle">Enter your lobby password to continue</p>
+    <input type="password" id="lobby-password" placeholder="Lobby password" autocomplete="off">
+    <p id="lobby-error" class="step-error"></p>
+    <button id="btn-lobby-join" class="btn-primary">Join lobby →</button>
+    
+    <button id="btn-lobby-create" class="btn-secondary">Create lobby →</button>
+    
+    <div id="lobby-creator">
+      <div class="horizontal-line"></div>
+      <p class="lobby-subtitle">Enter your new lobby name and password</p>
+      <input type="text" id="lobby-new-name" placeholder="Lobby name" autocomplete="off">
+      <input type="password" id="lobby-new-password" placeholder="Lobby password" autocomplete="off">
+      <p id="step-lobby-create-error" class="step-error"></p>
+      <button id="btn-lobby-home" class="btn-primary">Next: set home location →</button>
+    </div>    
+  </div>     
+</div>
 
   <!-- Home location picker (shown over map) -->
   <div id="lobby-home-picker" style="display:none;">
@@ -64,6 +99,7 @@
     <!-- LOBBY BADGE (top left) -->
     <div id="lobby-badge">
       <span id="lobby-badge-name"></span>
+      <button id="btn-admin-panel" style="display:none;">Admin</button>
       <button id="btn-leave-lobby">Leave</button>
     </div>
 
@@ -159,6 +195,44 @@
     </div>
 
   </div>
+
+
+<!-- ── ADMIN PANEL ───────────────────────────────── -->
+<div id="admin-panel" style="display:none;">
+  <div id="admin-card">
+    <div class="admin-header">
+      <div>
+        <h2>🎮 Admin / Gamemaster</h2>
+        <p>Manage your lobby, games and safety tools.</p>
+      </div>
+      <button id="btn-admin-close">×</button>
+    </div>
+
+    <div class="admin-section">
+      <h3>Gamemodes</h3>
+      <button class="admin-action" id="btn-admin-treasure">🏴‍☠️ Create Treasure Hunt</button>
+      <button class="admin-action" id="btn-admin-manhunt">🏃 Start Manhunt</button>
+      <button class="admin-action" id="btn-admin-capture">🚩 Capture The Sticker</button>
+    </div>
+
+    <div class="admin-section">
+      <h3>Moderation</h3>
+      <button class="admin-action" id="btn-admin-review">🖼 Review Stickers</button>
+      <button class="admin-action" id="btn-admin-rules">📋 Rules & Legal</button>
+    </div>
+
+    <div class="admin-section">
+      <h3>Lobby</h3>
+      <button class="admin-action" id="btn-admin-settings">⚙️ Lobby Settings</button>
+    </div>
+  </div>
+</div>
+
+<!-- ACTIVE HUNT BADGE -->
+<div id="hunt-badge" style="display:none;">
+  <strong>🏴‍☠️ Treasure Hunt</strong>
+  <span id="hunt-timer">Loading…</span>
+</div>
 
   <!-- TOAST -->
   <div id="toast"></div>
