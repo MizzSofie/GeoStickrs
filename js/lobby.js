@@ -1,8 +1,32 @@
 import { supabase } from './supabase.js';
 
+// ── NEU: LOBBIES LADEN BEIM START ────────────────────
+window.addEventListener('load', async () => {
+  const select = document.getElementById('lobby-select');
+  
+  const { data, error } = await supabase
+    .from('lobbies')
+    .select('name')
+    .order('name', { ascending: true });
+
+  if (error || !data) {
+    select.innerHTML = '<option value="" disabled>Error loading lobbies</option>';
+    return;
+  }
+
+  select.innerHTML = '<option value="" disabled selected>Select a lobby…</option>';
+  data.forEach(lobby => {
+    const option = document.createElement('option');
+    option.value = lobby.name;
+    option.textContent = lobby.name;
+    select.appendChild(option);
+  });
+});
+
 // ── LOBBY STATE ──────────────────────────────────────
 // Exported so map.js and submission.js can read current lobby
 export let currentLobby = null;
+export let currentAdminToken = null;
 
 // ── RESTORE FROM SESSION ─────────────────────────────
 const savedLobby = sessionStorage.getItem('geostickrs_lobby');
@@ -33,7 +57,7 @@ export async function joinLobby() {
 
   const { data, error } = await supabase
     .from('lobbies')
-    .select('name, password, home_lat, home_lng')
+    .select('id, name, password, home_lat, home_lng')
     .eq('password', input)
     .single();
 
@@ -43,6 +67,7 @@ export async function joinLobby() {
   if (error || !data) { showLobbyError('Wrong password. Try again.'); return; }
 
   currentLobby = {
+    id:       data.id,
     name:     data.name,
     password: data.password,
     home_lat: data.home_lat,
@@ -139,12 +164,15 @@ document.getElementById('btn-home-confirm').addEventListener('click', async () =
     return;
   }
 
-  const { error } = await supabase.from('lobbies').insert([{
-    name,
-    password,
-    home_lat: selectedHomeLat,
-    home_lng: selectedHomeLng,
-  }]);
+    const { data: createdLobby, error } = await supabase.from('lobbies')
+      .insert([{
+        name,
+        password,
+        home_lat: selectedHomeLat,
+        home_lng: selectedHomeLng,
+      }])
+      .select('id, name, password, home_lat, home_lng')
+      .single();
 
   btn.disabled    = false;
   btn.textContent = 'Confirm home →';
@@ -154,8 +182,25 @@ document.getElementById('btn-home-confirm').addEventListener('click', async () =
   // Auto-join the new lobby
   document.getElementById('lobby-home-picker').style.display = 'none';
   document.getElementById('lobby-home-hint').style.display   = 'none';
-  currentLobby = { name, password, home_lat: selectedHomeLat, home_lng: selectedHomeLng };
+
+
+  currentLobby = {
+  id: createdLobby.id,
+  name: createdLobby.name,
+  password: createdLobby.password,
+  home_lat: createdLobby.home_lat,
+  home_lng: createdLobby.home_lng,
+};
+
+  //currentAdminToken = adminToken;
+
   sessionStorage.setItem('geostickrs_lobby', JSON.stringify(currentLobby));
+  //localStorage.setItem(`geostickrs_admin_${createdLobby.id}`, adminToken);
+
+  localStorage.setItem(`geostickrs_admin_${currentLobby.name}`, 'true');
+
+  alert('Lobby created! You are now the admin of this lobby.');
+
   window._enterApp?.();
 });
 
