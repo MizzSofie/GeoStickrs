@@ -211,6 +211,7 @@
     <div class="admin-section">
       <h3>Gamemodes</h3>
       <button class="admin-action" id="btn-admin-treasure">🏴‍☠️ Create Treasure Hunt</button>
+      <button class="admin-action" id="btn-admin-endhunt">❌ End Treasure Hunt</button>
       <button class="admin-action" id="btn-admin-manhunt">🏃 Start Manhunt</button>
       <button class="admin-action" id="btn-admin-capture">🚩 Capture The Sticker</button>
     </div>
@@ -237,6 +238,46 @@
     Start Hunt
   </button>
 </div>
+
+
+
+<div id="hint-modal" style="display:none;">
+  <div id="hint-card">
+    <h3>Checkpoint Hint</h3>
+
+    <input
+      type="text"
+      id="checkpoint-hint-input"
+      placeholder="Enter hint..."
+    >
+
+    <button id="btn-save-hint">
+      Save Hint
+    </button>
+  </div>
+</div>
+
+
+
+<!-- CHECKPOINT HINT MODAL -->
+<div id="hint-modal" style="display:none;">
+  <div id="hint-card">
+    <h3>Checkpoint Hint</h3>
+
+    <input
+      type="text"
+      id="checkpoint-hint-input"
+      placeholder="Enter hint..."
+      autocomplete="off"
+    >
+
+    <button id="btn-save-hint" class="btn-primary">
+      Save Hint
+    </button>
+  </div>
+</div>
+
+
 
   <!-- TOAST -->
   <div id="toast"></div>

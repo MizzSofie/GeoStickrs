@@ -150,6 +150,10 @@ function initAdminPanel() {
   document.getElementById('btn-admin-settings')?.addEventListener('click', () => {
     alert('Lobby settings coming soon.');
   });
+
+  document.getElementById('btn-admin-endhunt')?.addEventListener('click', () => {
+  endTreasureHunt();
+});
 }
 
 window.addEventListener('load', initAdminPanel);
@@ -162,6 +166,8 @@ window.addEventListener('load', initAdminPanel);
 let treasureHuntDraft = null;
 let treasureHuntStep = 0;
 let treasureHuntMarkers = [];
+let pendingCheckpoint = null;
+let pendingCheckpointMarker = null;
 
 function getTreasureHuntStorageKey() {
   const lobby = JSON.parse(sessionStorage.getItem('geostickrs_lobby'));
@@ -201,19 +207,26 @@ function handleTreasureHuntClick(lat, lng) {
 
   // First 3 clicks = checkpoints
   if (treasureHuntStep < 3) {
-    const hint = `Hint for Checkpoint ${treasureHuntStep + 1}`;
+    const hintModal = document.getElementById('hint-modal');
+    const hintInput = document.getElementById('checkpoint-hint-input');
+    const saveButton = document.getElementById('btn-save-hint');
+    pendingCheckpoint = { lat, lng };
 
-    treasureHuntDraft.checkpoints.push({
-      lat,
-      lng,
-      hint
-    });
+  if (hintInput) {
+  hintInput.value = '';
+}
+
+if (hintModal) {
+  hintModal.style.display = 'flex';
+}
+
+return;
 
     const marker = L.marker([lat, lng])
       .addTo(map)
       .bindPopup(`
         <strong>Checkpoint ${treasureHuntStep + 1}</strong><br>
-        ${hint || 'No hint added'}
+        ${hint}
       `)
   .openPopup();
 
@@ -329,3 +342,70 @@ startButton?.addEventListener('click', () => {
 }
 
 let activePlayerHunt = null;
+
+function endTreasureHunt() {
+  localStorage.removeItem(getTreasureHuntStorageKey());
+
+  treasureHuntMarkers.forEach(marker => {
+    if (map.hasLayer(marker)) {
+      map.removeLayer(marker);
+    }
+  });
+
+  treasureHuntMarkers = [];
+  treasureHuntDraft = null;
+  treasureHuntStep = 0;
+  activePlayerHunt = null;
+  
+
+  const badge = document.getElementById('hunt-badge');
+  if (badge) {
+    badge.style.display = 'none';
+  }
+
+  alert('Treasure Hunt ended.');
+}
+
+
+function initHintModal() {
+  const hintModal = document.getElementById('hint-modal');
+  const hintInput = document.getElementById('checkpoint-hint-input');
+  const saveButton = document.getElementById('btn-save-hint');
+
+  if (!hintModal || !hintInput || !saveButton) return;
+
+  saveButton.addEventListener('click', () => {
+    if (!pendingCheckpoint || !treasureHuntDraft) return;
+
+    const hint = hintInput.value.trim() || `Hint for Checkpoint ${treasureHuntStep + 1}`;
+
+    treasureHuntDraft.checkpoints.push({
+      lat: pendingCheckpoint.lat,
+      lng: pendingCheckpoint.lng,
+      hint
+    });
+
+    const marker = L.marker([pendingCheckpoint.lat, pendingCheckpoint.lng])
+      .addTo(map)
+      .bindPopup(`
+        <strong>Checkpoint ${treasureHuntStep + 1}</strong><br>
+        ${hint}
+      `)
+      .openPopup();
+
+    treasureHuntMarkers.push(marker);
+
+    pendingCheckpoint = null;
+    hintModal.style.display = 'none';
+
+    treasureHuntStep++;
+
+    if (treasureHuntStep < 3) {
+      alert(`Checkpoint ${treasureHuntStep} saved. Set Checkpoint ${treasureHuntStep + 1}.`);
+    } else {
+      alert('Checkpoint 3 saved. Now place the Treasure.');
+    }
+  });
+}
+
+window.addEventListener('load', initHintModal);
