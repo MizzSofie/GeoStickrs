@@ -4,6 +4,7 @@
 
 import './js/lobby.js';
 import { init, loadAllStickers, loadLeaderboard, submission } from './js/submission.js';
+import { supabase } from './js/supabase.js';
 
 const GLOBAL_ADMIN_PASSWORD = 'LBS_Admin';
 
@@ -54,7 +55,7 @@ function initMap() {
 
   loadAllStickers();
   loadLeaderboard();
-  loadSavedTreasureHunt();
+  loadTreasureHuntFromSupabase();
 }
 
 // ── ENTER APP ────────────────────────────────────────
@@ -230,6 +231,7 @@ let treasureHuntStep = 0;
 let treasureHuntMarkers = [];
 let pendingCheckpoint = null;
 let pendingCheckpointMarker = null;
+let treasureHuntCheckpointCount = 3;
 
 function getTreasureHuntStorageKey() {
   const lobby = JSON.parse(sessionStorage.getItem('geostickrs_lobby'));
@@ -240,6 +242,15 @@ function startTreasureHuntCreator() {
   console.log('Treasure Hunt Creator started');
   const adminPanel = document.getElementById('admin-panel');
   if (adminPanel) adminPanel.style.display = 'none';
+
+  const countInput = document.getElementById('treasure-checkpoint-count');
+  const selectedCount = Number(countInput?.value);
+
+  treasureHuntCheckpointCount =
+  Number.isInteger(selectedCount) && selectedCount > 0
+    ? selectedCount
+    : 3;
+
 
   const durationMinutes = 60; // default: 1 hour
 
@@ -252,6 +263,7 @@ function startTreasureHuntCreator() {
   treasureHuntDraft = {
     name: 'Treasure Hunt',
     checkpoints: [],
+    checkpointCount: treasureHuntCheckpointCount,
     treasure: null,
     createdAt: new Date().toISOString(),
     expiresAt,
@@ -260,15 +272,16 @@ function startTreasureHuntCreator() {
 
   treasureHuntStep = 0;
 
-  alert('Treasure Hunt Creator started. Click on the map to set Checkpoint 1.');
-}
+  alert(
+  `Treasure Hunt Creator started. Click on the map to set Checkpoint 1 of ${treasureHuntCheckpointCount}.`);
+  }
 
 function handleTreasureHuntClick(lat, lng) {
   console.log('Treasure Hunt click received:', lat, lng, treasureHuntStep);
   if (!map || !treasureHuntDraft) return;
 
   // First 3 clicks = checkpoints
-  if (treasureHuntStep < 3) {
+  if (treasureHuntStep < treasureHuntCheckpointCount) {
     const hintModal = document.getElementById('hint-modal');
     const hintInput = document.getElementById('checkpoint-hint-input');
     const saveButton = document.getElementById('btn-save-hint');
@@ -296,10 +309,11 @@ return;
 
     treasureHuntStep++;
 
-    if (treasureHuntStep < 3) {
+    if (treasureHuntStep < treasureHuntCheckpointCount) {
       alert(`Checkpoint ${treasureHuntStep} saved. Set Checkpoint ${treasureHuntStep + 1}.`);
     } else {
-      alert('Checkpoint 3 saved. Now place the Treasure.');
+      alert(`Checkpoint ${treasureHuntCheckpointCount} saved. Now place the Treasure.`
+    );
     }
 
     return;
@@ -316,6 +330,8 @@ return;
   treasureHuntMarkers.push(treasureMarker);
 
   localStorage.setItem(getTreasureHuntStorageKey(), JSON.stringify(treasureHuntDraft));
+
+  saveTreasureHuntToSupabase(treasureHuntDraft);
 
   console.log('Treasure Hunt created:', treasureHuntDraft);
 
@@ -455,10 +471,11 @@ function initHintModal() {
 
     treasureHuntStep++;
 
-    if (treasureHuntStep < 3) {
+    if (treasureHuntStep < treasureHuntCheckpointCount) {
       alert(`Checkpoint ${treasureHuntStep} saved. Set Checkpoint ${treasureHuntStep + 1}.`);
     } else {
-      alert('Checkpoint 3 saved. Now place the Treasure.');
+      alert(
+  `Checkpoint ${treasureHuntCheckpointCount} saved. Now place the Treasure.`);
     }
   });
 }
@@ -476,9 +493,12 @@ function startPreparedTreasureHunt() {
 
   const hunt = JSON.parse(saved);
 
-  if (!hunt.checkpoints || hunt.checkpoints.length < 3 || !hunt.treasure) {
-    alert('Treasure Hunt is incomplete. Please create 3 checkpoints and a treasure first.');
-    return;
+  if (
+    !hunt.checkpoints ||
+    hunt.checkpoints.length < hunt.checkpointCount ||
+    !hunt.treasure
+  ) {
+    alert(`Treasure Hunt is incomplete. Please create ${hunt.checkpointCount} checkpoints and a treasure first.`);
   }
 
   const durationMinutes = 60;
@@ -488,6 +508,8 @@ function startPreparedTreasureHunt() {
   hunt.expiresAt = new Date(Date.now() + durationMinutes * 60 * 1000).toISOString();
 
   localStorage.setItem(getTreasureHuntStorageKey(), JSON.stringify(hunt));
+
+  updateTreasureHuntInSupabase(hunt);
 
   showHuntBadge(hunt);
 
@@ -586,7 +608,9 @@ function initAdminLoginModal() {
       (lobby?.admin_token && enteredToken === lobby.admin_token) ||
       enteredToken === GLOBAL_ADMIN_PASSWORD
     ) {
-      localStorage.setItem(`geostickrs_admin_${lobby.name}`, enteredToken);
+      localStorage.setItem(`geostickrs_admin_${lobby.name}`,
+        lobby.admin_token
+    );
 
       modal.style.display = 'none';
       input.value = '';
@@ -600,3 +624,91 @@ function initAdminLoginModal() {
 }
 
 window.addEventListener('load', initAdminLoginModal);
+
+
+async function saveTreasureHuntToSupabase(hunt) {
+  const lobby = JSON.parse(sessionStorage.getItem('geostickrs_lobby'));
+
+  if (!lobby || !hunt) {
+    alert('No lobby or hunt found.');
+    return;
+  }
+
+  const { error } = await supabase
+    .from('treasure_hunts')
+    .insert([{
+      lobby: lobby.name,
+      active: hunt.active,
+      expires_at: hunt.expiresAt,
+      hunt_data: hunt
+    }]);
+
+  if (error) {
+    console.error('Error saving Treasure Hunt:', error);
+    alert('Error saving Treasure Hunt to Supabase.');
+    return;
+  }
+
+  console.log('Treasure Hunt saved to Supabase:', hunt);
+}
+
+async function updateTreasureHuntInSupabase(hunt) {
+  const lobby = JSON.parse(sessionStorage.getItem('geostickrs_lobby'));
+
+  if (!lobby || !hunt) return;
+
+  const { error } = await supabase
+    .from('treasure_hunts')
+    .update({
+      active: hunt.active,
+      expires_at: hunt.expiresAt,
+      hunt_data: hunt
+    })
+    .eq('lobby', lobby.name);
+
+  if (error) {
+    console.error('Error updating Treasure Hunt:', error);
+    alert('Error updating Treasure Hunt in Supabase.');
+    return;
+  }
+
+  console.log('Treasure Hunt updated in Supabase:', hunt);
+}
+
+
+
+async function loadTreasureHuntFromSupabase() {
+  const lobby = JSON.parse(
+    sessionStorage.getItem('geostickrs_lobby')
+  );
+
+  if (!lobby) return;
+
+  const { data, error } = await supabase
+    .from('treasure_hunts')
+    .select('*')
+    .eq('lobby', lobby.name)
+    .eq('active', true)
+    .order('created_at', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  if (error) {
+    console.error('Error loading Treasure Hunt:', error);
+    return;
+  }
+
+  if (!data) {
+    console.log('No active Treasure Hunt found.');
+    return;
+  }
+
+  console.log('Active Treasure Hunt loaded:', data);
+
+  localStorage.setItem(
+    getTreasureHuntStorageKey(),
+    JSON.stringify(data.hunt_data)
+  );
+
+  loadSavedTreasureHunt();
+}
