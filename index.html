@@ -200,6 +200,30 @@
 <!-- ── ADMIN PANEL ───────────────────────────────── -->
 <div id="admin-panel" style="display:none;">
   <div id="admin-card">
+    <div id="treasure-panel" style="display:none;">
+
+      <div class="admin-section">
+        <h3>🏴‍☠️ Treasure Hunt Manager</h3>
+
+        <button class="admin-action" id="btn-treasure-create">
+          Create / Edit Hunt
+        </button>
+
+        <button class="admin-action" id="btn-treasure-start">
+          ▶ Start Hunt
+        </button>
+
+        <button class="admin-action" id="btn-treasure-stop">
+          ❌ End Hunt
+        </button>
+
+        <button class="admin-action" id="btn-treasure-back">
+          ← Back
+        </button>
+
+      </div>
+
+    </div>
     <div class="admin-header">
       <div>
         <h2>🎮 Admin / Gamemaster</h2>
@@ -210,10 +234,18 @@
 
     <div class="admin-section">
       <h3>Gamemodes</h3>
-      <button class="admin-action" id="btn-admin-treasure">🏴‍☠️ Create Treasure Hunt</button>
-      <button class="admin-action" id="btn-admin-endhunt">❌ End Treasure Hunt</button>
-      <button class="admin-action" id="btn-admin-manhunt">🏃 Start Manhunt</button>
-      <button class="admin-action" id="btn-admin-capture">🚩 Capture The Sticker</button>
+
+      <button class="admin-action" id="btn-admin-treasure">
+        🏴‍☠️ Treasure Hunt
+      </button>
+
+      <button class="admin-action" id="btn-admin-manhunt">
+        🏃 Start Manhunt
+      </button>
+
+      <button class="admin-action" id="btn-admin-capture">
+        🚩 Capture The Sticker
+      </button>
     </div>
 
     <div class="admin-section">
@@ -233,10 +265,6 @@
 <div id="hunt-badge" style="display:none;">
   <strong>🏴‍☠️ Treasure Hunt</strong>
   <span id="hunt-timer">Loading…</span>
-
-  <button id="btn-start-hunt">
-    Start Hunt
-  </button>
 </div>
 
 

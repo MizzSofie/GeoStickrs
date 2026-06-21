@@ -30,6 +30,12 @@ function initMap() {
       return;
     }
 
+    const savedHunt = localStorage.getItem(getTreasureHuntStorageKey());
+
+    if (savedHunt) {
+    checkTreasureHuntProgress(e.latlng.lat, e.latlng.lng);
+    }
+
     submission.lat = e.latlng.lat;
     submission.lng = e.latlng.lng;
     const el = document.getElementById('location-instruction');
@@ -108,6 +114,16 @@ function initAdminPanel() {
   const adminPanel = document.getElementById('admin-panel');
   const closeButton = document.getElementById('btn-admin-close');
 
+  const treasurePanel = document.getElementById('treasure-panel');
+
+  const treasureMenuButton = document.getElementById('btn-admin-treasure');
+  const treasureBackButton = document.getElementById('btn-treasure-back');
+
+  const treasureCreateButton = document.getElementById('btn-treasure-create');
+  const treasureStartButton = document.getElementById('btn-treasure-start');
+  const treasureStopButton = document.getElementById('btn-treasure-stop');
+
+
   const treasureButton = document.getElementById('btn-admin-treasure');
   console.log('Treasure button found:', treasureButton);
 
@@ -127,8 +143,24 @@ function initAdminPanel() {
     }
   });
 
-  treasureButton?.addEventListener('click', () => {console.log('Treasure button clicked');
+  treasureMenuButton?.addEventListener('click', () => {
+  treasurePanel.style.display = 'block';
+  });
+
+  treasureBackButton?.addEventListener('click', () => {
+  treasurePanel.style.display = 'none';
+  });
+
+  treasureCreateButton?.addEventListener('click', () => {
   startTreasureHuntCreator();
+  });
+
+  treasureStartButton?.addEventListener('click', () => {
+  startPreparedTreasureHunt();
+  });
+
+  treasureStopButton?.addEventListener('click', () => {
+  endTreasureHunt();
   });
 
   document.getElementById('btn-admin-manhunt')?.addEventListener('click', () => {
@@ -193,7 +225,7 @@ function startTreasureHuntCreator() {
     treasure: null,
     createdAt: new Date().toISOString(),
     expiresAt,
-    active: true
+    active: false
   };
 
   treasureHuntStep = 0;
@@ -270,6 +302,10 @@ function loadSavedTreasureHunt() {
 
   const hunt = JSON.parse(saved);
 
+  if (!hunt.active) {
+  return;
+  }
+
   if (hunt.expiresAt && new Date(hunt.expiresAt) < new Date()) {
     localStorage.removeItem(getTreasureHuntStorageKey());
     return;
@@ -329,18 +365,7 @@ function showHuntBadge(hunt) {
 clearInterval(huntTimerInterval);
 huntTimerInterval = setInterval(updateTimer, 1000);
 
-const startButton = document.getElementById('btn-start-hunt');
-
-startButton?.addEventListener('click', () => {
-  activePlayerHunt = {
-    currentCheckpoint: 0,
-    startedAt: new Date().toISOString()
-  };
-
-  alert('Checkpoint 1 activated.');
-});
 }
-
 let activePlayerHunt = null;
 
 function endTreasureHunt() {
@@ -409,3 +434,96 @@ function initHintModal() {
 }
 
 window.addEventListener('load', initHintModal);
+
+
+function startPreparedTreasureHunt() {
+  const saved = localStorage.getItem(getTreasureHuntStorageKey());
+
+  if (!saved) {
+    alert('No Treasure Hunt created yet.');
+    return;
+  }
+
+  const hunt = JSON.parse(saved);
+
+  if (!hunt.checkpoints || hunt.checkpoints.length < 3 || !hunt.treasure) {
+    alert('Treasure Hunt is incomplete. Please create 3 checkpoints and a treasure first.');
+    return;
+  }
+
+  const durationMinutes = 60;
+
+  hunt.active = true;
+  hunt.startedAt = new Date().toISOString();
+  hunt.expiresAt = new Date(Date.now() + durationMinutes * 60 * 1000).toISOString();
+
+  localStorage.setItem(getTreasureHuntStorageKey(), JSON.stringify(hunt));
+
+  showHuntBadge(hunt);
+
+  alert('🏴‍☠️ Treasure Hunt started!');
+}
+
+
+
+
+function checkTreasureHuntProgress(lat, lng) {
+  const saved = localStorage.getItem(getTreasureHuntStorageKey());
+  if (!saved) return;
+
+  const hunt = JSON.parse(saved);
+
+  if (!hunt.active) return;
+
+  if (!activePlayerHunt) {
+    activePlayerHunt = {
+      currentCheckpoint: 0,
+      treasureUnlocked: false,
+      completed: false
+    };
+  }
+
+  if (activePlayerHunt.completed) return;
+
+  const radiusMeters = 50000; // 50 km for testing
+
+  if (!activePlayerHunt.treasureUnlocked) {
+    const currentIndex = activePlayerHunt.currentCheckpoint;
+    const checkpoint = hunt.checkpoints[currentIndex];
+
+    if (!checkpoint) return;
+
+    const distance = map.distance(
+      [lat, lng],
+      [checkpoint.lat, checkpoint.lng]
+    );
+
+    if (distance <= radiusMeters) {
+      activePlayerHunt.currentCheckpoint++;
+
+      if (activePlayerHunt.currentCheckpoint < hunt.checkpoints.length) {
+        const nextHint = hunt.checkpoints[activePlayerHunt.currentCheckpoint].hint;
+        alert(`✅ Checkpoint ${currentIndex + 1} found!\n\nNext hint:\n${nextHint}`);
+      } else {
+        activePlayerHunt.treasureUnlocked = true;
+        alert('✅ All checkpoints found!\n\nNow find the treasure.');
+      }
+    } else {
+      alert('Not close enough. Keep searching!');
+    }
+
+    return;
+  }
+
+  const treasureDistance = map.distance(
+    [lat, lng],
+    [hunt.treasure.lat, hunt.treasure.lng]
+  );
+
+  if (treasureDistance <= radiusMeters) {
+    activePlayerHunt.completed = true;
+    alert('🏆 Treasure Hunt completed!');
+  } else {
+    alert('Treasure is not here. Keep searching!');
+  }
+}
