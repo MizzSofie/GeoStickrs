@@ -269,23 +269,6 @@
 
 
 
-<div id="hint-modal" style="display:none;">
-  <div id="hint-card">
-    <h3>Checkpoint Hint</h3>
-
-    <input
-      type="text"
-      id="checkpoint-hint-input"
-      placeholder="Enter hint..."
-    >
-
-    <button id="btn-save-hint">
-      Save Hint
-    </button>
-  </div>
-</div>
-
-
 
 <!-- CHECKPOINT HINT MODAL -->
 <div id="hint-modal" style="display:none;">
@@ -305,10 +288,57 @@
   </div>
 </div>
 
+<!-- ADMIN LOGIN MODAL -->
+<div id="admin-login-modal" style="display:none;">
+  <div class="admin-login-content">
+
+    <h3>🔒 Admin Login</h3>
+
+    <input
+      id="admin-token-input"
+      type="text"
+      placeholder="Enter admin code"
+      autocomplete="off"
+    >
+
+    <button id="btn-admin-login" class="btn-primary">
+      Login
+    </button>
+
+    <button id="btn-admin-login-close" class="btn-secondary">
+      Cancel
+    </button>
+
+  </div>
+</div>
+
+<!-- TOAST -->
+<div id="toast"></div>
 
 
-  <!-- TOAST -->
-  <div id="toast"></div>
+<div id="admin-login-modal" style="display:none;">
+  <div class="admin-login-content">
+
+    <h3>🔒 Admin Login</h3>
+
+    <input
+      id="admin-token-input"
+      type="text"
+      placeholder="Enter admin code"
+      autocomplete="off"
+    >
+
+    <button id="btn-admin-login">
+      Login
+    </button>
+
+    <button id="btn-admin-login-close">
+      Cancel
+    </button>
+
+  </div>
+</div>
+
 
   <!-- Scripts -->
   <script src="https://unpkg.com/leaflet@1.9.3/dist/leaflet.js"></script>

@@ -5,6 +5,9 @@
 import './js/lobby.js';
 import { init, loadAllStickers, loadLeaderboard, submission } from './js/submission.js';
 
+const GLOBAL_ADMIN_PASSWORD = 'LBS_Admin';
+
+
 // ── MAP SETUP ────────────────────────────────────────
 let map = null;
 
@@ -68,17 +71,10 @@ function enterApp() {
   
   const adminButton = document.getElementById('btn-admin-panel');
 
-  const localAdminToken = lobby?.name
-    ? localStorage.getItem(`geostickrs_admin_${lobby.name}`)
-    : null;
 
-  if (
-    adminButton &&
-    localAdminToken &&
-    lobby?.admin_token &&
-    localAdminToken === lobby.admin_token
-  ) {
-    adminButton.style.display = 'inline-block';
+
+  if (adminButton) {
+  adminButton.style.display = 'inline-block';
   }
 
 
@@ -145,8 +141,27 @@ function initAdminPanel() {
   if (!adminButton || !adminPanel || !closeButton) return;
 
   adminButton.addEventListener('click', () => {
+  const lobby = JSON.parse(sessionStorage.getItem('geostickrs_lobby'));
+
+  const localToken = localStorage.getItem(
+    `geostickrs_admin_${lobby.name}`
+  );
+
+  if (
+    localToken &&
+    lobby.admin_token &&
+    localToken === lobby.admin_token
+  ) {
     adminPanel.style.display = 'flex';
-  });
+    return;
+  }
+
+  const adminLoginModal = document.getElementById('admin-login-modal');
+
+  if (adminLoginModal) {
+    adminLoginModal.style.display = 'flex';
+  }
+});
 
   closeButton.addEventListener('click', () => {
     adminPanel.style.display = 'none';
@@ -542,3 +557,46 @@ function checkTreasureHuntProgress(lat, lng) {
     alert('Treasure is not here. Keep searching!');
   }
 }
+
+
+function initAdminLoginModal() {
+  const modal = document.getElementById('admin-login-modal');
+  const input = document.getElementById('admin-token-input');
+  const loginButton = document.getElementById('btn-admin-login');
+  const closeButton = document.getElementById('btn-admin-login-close');
+  const adminPanel = document.getElementById('admin-panel');
+
+  if (!modal || !input || !loginButton || !closeButton || !adminPanel) return;
+
+  closeButton.addEventListener('click', () => {
+    modal.style.display = 'none';
+    input.value = '';
+  });
+
+  loginButton.addEventListener('click', () => {
+    const lobby = JSON.parse(sessionStorage.getItem('geostickrs_lobby'));
+    const enteredToken = input.value.trim();
+
+    if (!enteredToken) {
+      alert('Please enter an admin code.');
+      return;
+    }
+
+    if (
+      (lobby?.admin_token && enteredToken === lobby.admin_token) ||
+      enteredToken === GLOBAL_ADMIN_PASSWORD
+    ) {
+      localStorage.setItem(`geostickrs_admin_${lobby.name}`, enteredToken);
+
+      modal.style.display = 'none';
+      input.value = '';
+
+      adminPanel.style.display = 'flex';
+      return;
+    }
+
+    alert('Wrong admin code.');
+  });
+}
+
+window.addEventListener('load', initAdminLoginModal);
