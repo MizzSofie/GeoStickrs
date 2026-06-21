@@ -8,7 +8,7 @@ window.addEventListener('load', async () => {
     .from('lobbies')
     .select('name')
     .order('name', { ascending: true });
-
+ 
   if (error || !data) {
     select.innerHTML = '<option value="" disabled>Error loading lobbies</option>';
     return;

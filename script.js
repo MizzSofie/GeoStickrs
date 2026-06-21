@@ -391,7 +391,7 @@ function initHintModal() {
         <strong>Checkpoint ${treasureHuntStep + 1}</strong><br>
         ${hint}
       `)
-      .openPopup();
+      .openPopup();  
 
     treasureHuntMarkers.push(marker);
 

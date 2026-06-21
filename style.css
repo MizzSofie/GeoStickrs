@@ -789,7 +789,7 @@ input[type="text"]:focus {
 
 #hint-card {
   width: 360px;
-  max-width: 90vw;
+  max-width: 90vw; 
   background: white;
   border-radius: 18px;
   padding: 24px;
