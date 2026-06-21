@@ -57,7 +57,7 @@ export async function joinLobby() {
 
   const { data, error } = await supabase
     .from('lobbies')
-    .select('id, name, password, home_lat, home_lng')
+    .select('id, name, password, home_lat, home_lng, admin_token')
     .eq('password', input)
     .single();
 
@@ -72,6 +72,7 @@ export async function joinLobby() {
     password: data.password,
     home_lat: data.home_lat,
     home_lng: data.home_lng,
+    admin_token: data.admin_token,
   };
   sessionStorage.setItem('geostickrs_lobby', JSON.stringify(currentLobby));
   window._enterApp?.();
@@ -164,14 +165,18 @@ document.getElementById('btn-home-confirm').addEventListener('click', async () =
     return;
   }
 
-    const { data: createdLobby, error } = await supabase.from('lobbies')
+    const adminToken = crypto.randomUUID();
+
+    const { data: createdLobby, error } = await supabase
+      .from('lobbies')
       .insert([{
         name,
         password,
         home_lat: selectedHomeLat,
         home_lng: selectedHomeLng,
+        admin_token: adminToken,
       }])
-      .select('id, name, password, home_lat, home_lng')
+      .select('id, name, password, home_lat, home_lng, admin_token')
       .single();
 
   btn.disabled    = false;
@@ -190,6 +195,7 @@ document.getElementById('btn-home-confirm').addEventListener('click', async () =
   password: createdLobby.password,
   home_lat: createdLobby.home_lat,
   home_lng: createdLobby.home_lng,
+  admin_token: createdLobby.admin_token,
 };
 
   //currentAdminToken = adminToken;
@@ -197,7 +203,7 @@ document.getElementById('btn-home-confirm').addEventListener('click', async () =
   sessionStorage.setItem('geostickrs_lobby', JSON.stringify(currentLobby));
   //localStorage.setItem(`geostickrs_admin_${createdLobby.id}`, adminToken);
 
-  localStorage.setItem(`geostickrs_admin_${currentLobby.name}`, 'true');
+  localStorage.setItem(`geostickrs_admin_${currentLobby.name}`, adminToken);
 
   alert('Lobby created! You are now the admin of this lobby.');
 

@@ -62,14 +62,29 @@ function enterApp() {
   const lobby = JSON.parse(sessionStorage.getItem('geostickrs_lobby'));
   document.getElementById('lobby-badge-name').textContent = `🏠 ${lobby?.name ?? ''}`;
 
+  
+  
+  
+  
   const adminButton = document.getElementById('btn-admin-panel');
-  const adminToken = lobby?.name
+
+  const localAdminToken = lobby?.name
     ? localStorage.getItem(`geostickrs_admin_${lobby.name}`)
     : null;
 
-  if (adminButton && adminToken) {
+  if (
+    adminButton &&
+    localAdminToken &&
+    lobby?.admin_token &&
+    localAdminToken === lobby.admin_token
+  ) {
     adminButton.style.display = 'inline-block';
   }
+
+
+
+
+
 
   initMap();
 }
