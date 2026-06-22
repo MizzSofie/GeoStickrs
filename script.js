@@ -412,7 +412,7 @@ function endTreasureHunt() {
   if (badge) {
     badge.style.display = 'none';
   }
-
+  endTreasureHuntInSupabase();
   alert('Treasure Hunt ended.');
 }
 
@@ -655,7 +655,25 @@ async function updateTreasureHuntInSupabase(hunt) {
   console.log('Treasure Hunt updated in Supabase:', hunt);
 }
 
+async function endTreasureHuntInSupabase() {
+  const lobby = JSON.parse(
+    sessionStorage.getItem('geostickrs_lobby')
+  );
 
+  if (!lobby) return;
+
+  const { error } = await supabase
+    .from('treasure_hunts')
+    .update({ active: false })
+    .eq('lobby', lobby.name);
+
+  if (error) {
+    console.error('Error ending Treasure Hunt:', error);
+    return;
+  }
+
+  console.log('Treasure Hunt ended in Supabase.');
+}
 
 async function loadTreasureHuntFromSupabase() {
   const lobby = JSON.parse(
