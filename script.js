@@ -280,46 +280,25 @@ function handleTreasureHuntClick(lat, lng) {
   console.log('Treasure Hunt click received:', lat, lng, treasureHuntStep);
   if (!map || !treasureHuntDraft) return;
 
-  // First 3 clicks = checkpoints
+  // First clicks = checkpoints
   if (treasureHuntStep < treasureHuntCheckpointCount) {
     const hintModal = document.getElementById('hint-modal');
     const hintInput = document.getElementById('checkpoint-hint-input');
-    const saveButton = document.getElementById('btn-save-hint');
+
     pendingCheckpoint = { lat, lng };
 
-  if (hintInput) {
-  hintInput.value = '';
-}
+    if (hintInput) {
+      hintInput.value = '';
+    }
 
-if (hintModal) {
-  hintModal.style.display = 'flex';
-}
-
-return;
-
-    const marker = L.marker([lat, lng])
-      .addTo(map)
-      .bindPopup(`
-        <strong>Checkpoint ${treasureHuntStep + 1}</strong><br>
-        ${hint}
-      `)
-  .openPopup();
-
-    treasureHuntMarkers.push(marker);
-
-    treasureHuntStep++;
-
-    if (treasureHuntStep < treasureHuntCheckpointCount) {
-      alert(`Checkpoint ${treasureHuntStep} saved. Set Checkpoint ${treasureHuntStep + 1}.`);
-    } else {
-      alert(`Checkpoint ${treasureHuntCheckpointCount} saved. Now place the Treasure.`
-    );
+    if (hintModal) {
+      hintModal.style.display = 'flex';
     }
 
     return;
   }
 
-  // Fourth click = treasure
+  // Next click = treasure
   treasureHuntDraft.treasure = { lat, lng };
 
   const treasureMarker = L.marker([lat, lng])
@@ -499,6 +478,7 @@ function startPreparedTreasureHunt() {
     !hunt.treasure
   ) {
     alert(`Treasure Hunt is incomplete. Please create ${hunt.checkpointCount} checkpoints and a treasure first.`);
+    return;
   }
 
   const durationMinutes = 60;
