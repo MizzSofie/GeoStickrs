@@ -65,25 +65,15 @@ function enterApp() {
 
   const lobby = JSON.parse(sessionStorage.getItem('geostickrs_lobby'));
   document.getElementById('lobby-badge-name').textContent = `🏠 ${lobby?.name ?? ''}`;
-
-  
-  
-  
   
   const adminButton = document.getElementById('btn-admin-panel');
-
-
 
   if (adminButton) {
   adminButton.style.display = 'inline-block';
   }
 
-
-
-
-
-
   initMap();
+  initMobileMenu();
 }
 
 // Expose globally so lobby.js can call window._enterApp()

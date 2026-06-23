@@ -24,7 +24,6 @@ window.addEventListener('load', async () => {
 });
 
 // ── LOBBY STATE ──────────────────────────────────────
-// Exported so map.js and submission.js can read current lobby
 export let currentLobby = null;
 export let currentAdminToken = null;
 
@@ -33,7 +32,6 @@ const savedLobby = sessionStorage.getItem('geostickrs_lobby');
 if (savedLobby) {
   currentLobby = JSON.parse(savedLobby);
   window.addEventListener('load', () => {
-    // enterApp is set by main script.js after all modules load
     window._enterApp?.();
   });
 }
@@ -102,7 +100,6 @@ document.getElementById('btn-lobby-home').addEventListener('click', () => {
   if (!password) { errorEl.textContent = 'Please enter a lobby password.'; errorEl.style.display = 'block'; return; }
   errorEl.style.display = 'none';
 
-  // Show home picker
   document.getElementById('lobby-screen').style.display = 'none';
   document.getElementById('lobby-home-picker').style.display = 'flex';
   document.getElementById('lobby-home-hint').style.display   = 'flex';
@@ -149,7 +146,6 @@ document.getElementById('btn-home-confirm').addEventListener('click', async () =
   btn.disabled    = true;
   btn.textContent = 'Creating…';
 
-  // Check password not already taken
   const { data: existing } = await supabase
     .from('lobbies').select('id').eq('password', password).maybeSingle();
 
@@ -165,44 +161,38 @@ document.getElementById('btn-home-confirm').addEventListener('click', async () =
     return;
   }
 
-    const adminToken = crypto.randomUUID();
+  const adminToken = crypto.randomUUID();
 
-    const { data: createdLobby, error } = await supabase
-      .from('lobbies')
-      .insert([{
-        name,
-        password,
-        home_lat: selectedHomeLat,
-        home_lng: selectedHomeLng,
-        admin_token: adminToken,
-      }])
-      .select('id, name, password, home_lat, home_lng, admin_token')
-      .single();
+  const { data: createdLobby, error } = await supabase
+    .from('lobbies')
+    .insert([{
+      name,
+      password,
+      home_lat: selectedHomeLat,
+      home_lng: selectedHomeLng,
+      admin_token: adminToken,
+    }])
+    .select('id, name, password, home_lat, home_lng, admin_token')
+    .single();
 
   btn.disabled    = false;
   btn.textContent = 'Confirm home →';
 
   if (error) { alert('Error creating lobby: ' + error.message); return; }
 
-  // Auto-join the new lobby
   document.getElementById('lobby-home-picker').style.display = 'none';
   document.getElementById('lobby-home-hint').style.display   = 'none';
 
-
   currentLobby = {
-  id: createdLobby.id,
-  name: createdLobby.name,
-  password: createdLobby.password,
-  home_lat: createdLobby.home_lat,
-  home_lng: createdLobby.home_lng,
-  admin_token: createdLobby.admin_token,
-};
-
-  //currentAdminToken = adminToken;
+    id:          createdLobby.id,
+    name:        createdLobby.name,
+    password:    createdLobby.password,
+    home_lat:    createdLobby.home_lat,
+    home_lng:    createdLobby.home_lng,
+    admin_token: createdLobby.admin_token,
+  };
 
   sessionStorage.setItem('geostickrs_lobby', JSON.stringify(currentLobby));
-  //localStorage.setItem(`geostickrs_admin_${createdLobby.id}`, adminToken);
-
   localStorage.setItem(`geostickrs_admin_${currentLobby.name}`, adminToken);
 
   alert('Lobby created! You are now the admin of this lobby.');
@@ -211,14 +201,80 @@ document.getElementById('btn-home-confirm').addEventListener('click', async () =
 });
 
 // ── LEAVE LOBBY ──────────────────────────────────────
-document.getElementById('btn-leave-lobby').addEventListener('click', () => {
+document.getElementById('btn-leave-lobby').addEventListener('click', leaveLobby);
+
+export function leaveLobby() {
   sessionStorage.removeItem('geostickrs_lobby');
   window.location.reload();
-});
+}
 
 // ── HELPERS ──────────────────────────────────────────
 function showLobbyError(msg) {
   const el = document.getElementById('lobby-error');
   el.textContent    = msg;
   el.style.display  = 'block';
+}
+
+// ── MOBILE MENU ───────────────────────────────────────
+// Wird von script.js aus enterApp() aufgerufen, nachdem die App sichtbar ist.
+export function initMobileMenu() {
+  // Nur auf kleinen Bildschirmen aktiv
+  if (window.innerWidth > 768) return;
+
+  // Verhindert doppeltes Einbinden (z.B. bei Hot-Reload)
+  if (document.getElementById('mobile-menu-btn')) return;
+
+  const lobby = JSON.parse(sessionStorage.getItem('geostickrs_lobby'));
+
+  // ── Overlay (dunkelt Karte ab, Klick schließt Drawer) ──
+  const overlay = document.createElement('div');
+  overlay.id = 'mobile-menu-overlay';
+  document.body.appendChild(overlay);
+
+  // ── Drawer ──────────────────────────────────────────
+  const drawer = document.createElement('div');
+  drawer.id = 'mobile-menu-drawer';
+  drawer.innerHTML = `
+    <div id="mobile-drawer-header">
+      <div id="mobile-drawer-lobby-name">🏠 ${lobby?.name ?? 'Lobby'}</div>
+      <div id="mobile-drawer-lobby-actions">
+        <button id="btn-admin-panel">⭐ Admin</button>
+        <button id="mobile-drawer-leave-btn">Leave</button>
+      </div>
+    </div>
+    <div id="mobile-drawer-leaderboard">
+      <h2>Leaderboard</h2>
+      <ul id="leaderboard-list"></ul>
+    </div>
+  `;
+  document.body.appendChild(drawer);
+
+  // ── Menü-Button (Hamburger, oben rechts) ────────────
+  const menuBtn = document.createElement('button');
+  menuBtn.id = 'mobile-menu-btn';
+  menuBtn.setAttribute('aria-label', 'Open menu');
+  menuBtn.innerHTML = `
+    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+      <line x1="3" y1="6"  x2="21" y2="6"/>
+      <line x1="3" y1="12" x2="21" y2="12"/>
+      <line x1="3" y1="18" x2="21" y2="18"/>
+    </svg>`;
+  document.body.appendChild(menuBtn);
+
+  // ── Öffnen / Schließen ───────────────────────────────
+  const open  = () => { drawer.classList.add('open');    overlay.classList.add('open');    };
+  const close = () => { drawer.classList.remove('open'); overlay.classList.remove('open'); };
+
+  menuBtn.addEventListener('click', open);
+  overlay.addEventListener('click', close);
+
+  // Leave-Button im Drawer
+  drawer.querySelector('#mobile-drawer-leave-btn')
+    .addEventListener('click', () => { close(); leaveLobby(); });
+
+  // Admin-Button im Drawer: der bestehende initAdminPanel()-Listener
+  // in script.js hört auf '#btn-admin-panel' — da der Button jetzt im Drawer
+  // liegt, schließen wir den Drawer zusätzlich beim Öffnen des Admin-Panels.
+  drawer.querySelector('#btn-admin-panel')
+    .addEventListener('click', close);
 }
